@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>区块链数据交易系统</title>
+</head>
+<body>
+<table>
+    <tr>
+        <td>id</td>
+        <td>隐私数据</td>
+        <td>数据类型</td>
+        <td>伪身份</td>
+        <td>时间戳</td>
+    </tr>
+    <tr th:each="data,memberStat:${senseData}">
+        <td th:text="${data.id}"/>
+        <td th:text="${data.senseData}"/>
+        <td th:text="${data.dataType}"/>
+        <td th:text="${data.pseId}"/>
+        <td th:text="${data.timeStp}"/>
+    </tr>
+</table>
+</body>
+</html>
