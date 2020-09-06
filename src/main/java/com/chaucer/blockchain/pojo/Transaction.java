@@ -6,23 +6,24 @@ import lombok.ToString;
 
 import javax.persistence.*;
 
+/**
+ * @author Chaucer
+ * @date 2019-10-14 16:41
+ */
+
 @Getter
 @Setter
 @ToString
-@Table(name = "mapping")
-public class Mapping {
+@Table(name = "transaction_data")
+public class Transaction {
 
     @Id()
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id ;
-    @Column(name = "pseId")
-    private String pseId;
-    @Column(name = "realId")
-    private String realId;
-    @Column(name = "dataType")
-    private String dataType;
+    private int id;
+    @Column(name = "label")
+    private String label;
     @Column(name = "timeStp")
-    private String timeStp;
+    private String timeStamp;
 
 }

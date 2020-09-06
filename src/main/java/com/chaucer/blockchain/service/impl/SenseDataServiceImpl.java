@@ -9,6 +9,7 @@ import com.chaucer.blockchain.service.SenseDataService;
 import com.chaucer.blockchain.utils.AES.AESutil;
 import com.chaucer.blockchain.utils.pseIdGen.ElGamal;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Random;
 
 @Component
+@Slf4j
 public class SenseDataServiceImpl implements SenseDataService {
 
     @Autowired
@@ -50,22 +52,9 @@ public class SenseDataServiceImpl implements SenseDataService {
 
     public DataStorageContract dataStorageContract = null;
 
-//    @Override
-//    public int ins(ArrayList<SenseData> sd) {
-//        int count = 0;
-//        for(int i = 0; i < sd.size(); i++){
-//            System.out.println("ins: " + sd.get(i).toString());
-//        }
-//        for(int i = 0; i < sd.size(); i++){
-//            int index = senseDataMapper.insert(sd.get(i));
-//            //System.out.println(sd.get(i).toString());
-//            if(index != 0){
-//                count++;
-//            }
-//        }
-//        System.out.println(count);
-//        return count;
-//    }
+    Mapping mapping = new Mapping();
+
+    private List<String> list = new ArrayList<>();
 
     public int readFromBlockchain(){
         SenseData senseData = new SenseData();
@@ -95,7 +84,7 @@ public class SenseDataServiceImpl implements SenseDataService {
                     return GAS_LIMIT;
                 }
             };
-            dataStorageContract = DataStorageContract.load("0x964468d46b69cf3229B09C18184e5Ab5CEF4BEBc",web3j,credentials,contractGasProvider);
+            dataStorageContract = DataStorageContract.load("0x59D47eC5a4f02d9faB923138C3296292DeB479D9",web3j,credentials,contractGasProvider);
             total = dataStorageContract.returnTotal().send();
         } catch (Exception e) {
             e.printStackTrace();
@@ -110,7 +99,8 @@ public class SenseDataServiceImpl implements SenseDataService {
                 senseData.setDataType("temptype00" + tempType);
                 senseData.setPseId(dataStorageContract.getPseId(BigInteger.valueOf(i)).send());
                 senseData.setTimeStp(dataStorageContract.getTimeStamp(BigInteger.valueOf(i)).send());
-                senseDataMapper.insert(senseData);;
+                senseData.setDataType(dataStorageContract.getDataType(BigInteger.valueOf(i)).send());
+                senseDataMapper.insert(senseData);
                 System.out.println(senseData.toString());
             }
             System.out.println("从区块链上读取了" + n + "条数据");
@@ -148,42 +138,61 @@ public class SenseDataServiceImpl implements SenseDataService {
                     return GAS_LIMIT;
                 }
             };
-            dataStorageContract = DataStorageContract.load("0x964468d46b69cf3229B09C18184e5Ab5CEF4BEBc",web3j,credentials,contractGasProvider);
+            dataStorageContract = DataStorageContract.load("0x59D47eC5a4f02d9faB923138C3296292DeB479D9",web3j,credentials,contractGasProvider);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         Random random = new Random();
-        Mapping mapping = new Mapping();
+
         //生成加密之后的伪身份
         int n = random.nextInt(20) % (20 - 1 + 1) + 1;
         String realId = "IoT device" + n;
         String pseId = ElGamal.encrypt(realId);
         mapping.setRealId(realId);
         mapping.setPseId(pseId);
+        list.add("开始执行伪身份生成算法：…………");
+        list.add("生成的伪身份为：" + pseId);
+        //log.info("生成的伪身份为：" + pseId);
 
         //生成温度数据
         int temperature  = random.nextInt(40) % (40 - 30 + 1) + 30;
         String senseData = "The current temperature is " + temperature + "degrees";
         String password = ElGamal.getSk();
-        System.out.println(password);
+        //System.out.println(password);
+        list.add("生成用于加密终端设备数据的密钥：" + password);
+        //log.info("生成用于加密终端设备数据的密钥：" + password);
 
         byte[] encrypt = AESutil.encrypt(senseData, password);
         String encryptSenseData = Base64.encode(encrypt);
-        System.out.println(encryptSenseData);
+        //System.out.println(encryptSenseData);
+        list.add("加密之后的数据：" + encryptSenseData);
+        //log.info("加密之后的数据：" + encryptSenseData);
 
         byte[] decrypt = AESutil.decrypt(encrypt, password);
         String decryptData = new String(decrypt);
-        System.out.println(decryptData);
+        //System.out.println(decryptData);
+
+        int tempType = random.nextInt(10) + 1;
+        String dataType = "temptype00" + tempType;
+        mapping.setDataType(dataType);
 
         //生成时间戳
         Date date = new Date();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd: HH:mm:ss");
         String timeStamp = simpleDateFormat.format(date);
+        mapping.setTimeStp(timeStamp);
+        list.add("记录当前时间戳：" + timeStamp);
+        //log.info("记录当前时间戳：" + timeStamp);
 
-
-        dataStorageContract.addData(encryptSenseData,pseId,timeStamp).sendAsync();
+        dataStorageContract.addData(encryptSenseData,pseId,timeStamp,dataType).sendAsync();
         return mapping;
+    }
+
+
+    @Override
+    public List<String> extractLogs() {
+        return list;
     }
 
     @Override
@@ -205,4 +214,6 @@ public class SenseDataServiceImpl implements SenseDataService {
         List<SenseData> list = senseDataMapper.selectByExample(example);
         return list;
     }
+
+
 }

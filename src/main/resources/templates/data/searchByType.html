@@ -63,25 +63,23 @@
 									<th>数据类型</th>
 									<th>伪身份</th>
 									<th>时间戳</th>
-									<th>操作</th>
 								</tr>
 							</thead>
 
 							<tbody>
-								<tr th:each="d:${data}">
+								<tr th:each="d:${dataByType}">
 									<td th:text="${d.id}"></td>
 									<td th:text="${d.senseData}"></td>
 									<td th:text="${d.dataType}"></td>
 									<td th:text="${d.pseId}"></td>
 									<td th:text="${d.timeStp}"></td>
-									<td>
-										<button class="btn btn-sm btn-primary">购买</button>
-									</td>
 								</tr>
 							</tbody>
-
-
 						</table>
+
+						<form th:action="@{/judgement}" method="post">
+							<input type="submit" class="btn btn-sm btn-success" th:type="submit" th:value="数据有误申请仲裁">
+						</form>
 					</div>
 				</main>
 			</div>

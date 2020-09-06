@@ -1,63 +1,106 @@
 package com.chaucer.blockchain;
 
-import com.chaucer.blockchain.contract.DataStorageContract;
+
+import com.chaucer.blockchain.controller.DataController;
 import com.chaucer.blockchain.pojo.Mapping;
 import com.chaucer.blockchain.pojo.SenseData;
 import com.chaucer.blockchain.service.SenseDataService;
-import com.chaucer.blockchain.service.impl.SenseDataServiceImpl;
+
+import com.chaucer.blockchain.service.TransactionService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.WalletUtils;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.gas.ContractGasProvider;
+
 
 import java.math.BigInteger;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
 
-        @RunWith(SpringRunner.class)
-        @SpringBootTest
-        public class BlockchainApplicationTests {
 
-            @Test
-            public void contextLoads() {
-            }
-            @Autowired
-            SenseDataService senseDataService;
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class BlockchainApplicationTests {
+    @Test
+    public void contextLoads() {
+    }
 
-            @Value("password")
-            private String password;
-            @Value("path")
-            private String path;
-            @Value("directory")
-            private String directory;
-            @Value("DataStorageAddress")
-            private String dataStorageAddress;
 
-            public static BigInteger GAS_PRICE = BigInteger.valueOf(20_0000L);
-            public static BigInteger GAS_LIMIT = BigInteger.valueOf(4_30000L);
+    @Autowired
+    SenseDataService senseDataService;
 
-            @Test
-            public void testWrite(){
+    @Autowired
+    TransactionService transactionService;
 
-                for(int i = 0; i < 5; i++){
-                    Mapping mapping = senseDataService.writeToBlockchain();
-                    senseDataService.insMapping(mapping);
-                }
+    @Autowired
+    DataController dataController;
 
-            }
+    @Value("password")
+    private String password;
+    @Value("path")
+    private String path;
+    @Value("directory")
+    private String directory;
+    @Value("DataStorageAddress")
+    private String dataStorageAddress;
 
-            @Test
-            public void testRead(){
-                senseDataService.readFromBlockchain();
+    public static BigInteger GAS_PRICE = BigInteger.valueOf(20_0000L);
+    public static BigInteger GAS_LIMIT = BigInteger.valueOf(4_30000L);
 
-            }
+    @Test
+    public void testWrite(){
+
+        long l1 = System.currentTimeMillis();
+        //for (int i = 0; i < 3; i++){
+            Mapping mapping = senseDataService.writeToBlockchain();
+            senseDataService.insMapping(mapping);
+        senseDataService.readFromBlockchain();
+        long l2 = System.currentTimeMillis();
+        System.out.println(l2-l1);
+        //}
+
+
+    }
+
+    @Test
+    public void testRead(){
+        senseDataService.readFromBlockchain();
+
+    }
+
+    @Test
+    public void testTrans() {
+        transactionService.buyerGenerateTransaction("temptype004");
+        transactionService.sellerGenerateTransaction("temptype004");
+        transactionService.generateCheque(100);
+        List<String> strings = transactionService.extractLogs();
+        System.out.println("日志打印开始：--------------------------");
+        for(int i = 0; i < strings.size(); i++) {
+            System.out.println(strings.get(i));
+        }
+    }
+
+    @Test
+    public void testSearch(){
+        List<SenseData> dataType = senseDataService.getSenseDataByDataType("temptype004");
+        for (int i = 0 ; i < dataType.size(); i++) {
+            System.out.println(dataType.get(i));
+        }
+    }
+
+    @Test
+    public void testGetMapping() {
+        List<Mapping> mapping = transactionService.getMapping("temptype004");
+        for (int i = 0;i < mapping.size(); i++) {
+            System.out.println(mapping.get(i).toString());
+
+        }
+    }
+
+    @Test
+    public void dataController() {
+        dataController.firstTransaction("temptype004");
+    }
 
 }
